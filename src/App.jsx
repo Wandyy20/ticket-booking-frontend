@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import FlightList from './pages/FlightList'
 import FlightDetail from './pages/FlightDetail'
+import PassengerInfo from './pages/PassengerModal'
 
 function App() {
   return (
