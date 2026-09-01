@@ -5,6 +5,23 @@ import PassengerModal from './PassengerModal'
 const SERVICE_FEE_PERCENT = 0.05
 const PLATFORM_FEE_PERCENT = 0.025
 
+function groupSeatsByRow(seats) {
+  const rows = {}
+  seats.forEach(seat => {
+    const match = seat.SeatNumber.match(/\d+/)
+    const rowNum = match ? match[0] : '0'
+    if (!rows[rowNum]) rows[rowNum] = []
+    rows[rowNum].push(seat)
+  })
+
+  return Object.entries(rows)
+    .sort((a, b) => Number(a[0]) - Number(b[0]))
+    .map(([rowNum, rowSeats]) => ({
+      rowNum,
+      seats: [...rowSeats].sort((a, b) => a.SeatNumber.localeCompare(b.SeatNumber))
+    }))
+}
+
 function FlightDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
@@ -21,9 +38,7 @@ function FlightDetail() {
   useEffect(() => {
     fetch(`http://localhost:8080/flights/${id}`)
       .then(res => {
-        if (!res.ok) {
-          throw new Error('Failed to load flight data')
-        }
+        if (!res.ok) throw new Error('Failed to load flight data')
         return res.json()
       })
       .then(data => setFlight(data))
@@ -31,9 +46,7 @@ function FlightDetail() {
 
     fetch(`http://localhost:8080/flights/${id}/seats`)
       .then(res => {
-        if (!res.ok) {
-          throw new Error('Failed to load seat data')
-        }
+        if (!res.ok) throw new Error('Failed to load seat data')
         return res.json()
       })
       .then(data => setSeats(data))
@@ -44,10 +57,7 @@ function FlightDetail() {
     if (seat.IsBooked) return
 
     if (selectedSeats.find(s => s.ID === seat.ID)) {
-      setSelectedSeats(
-        selectedSeats.filter(s => s.ID !== seat.ID)
-      )
-
+      setSelectedSeats(selectedSeats.filter(s => s.ID !== seat.ID))
       setPassengerNames(prev => {
         const updated = { ...prev }
         delete updated[seat.ID]
@@ -65,10 +75,7 @@ function FlightDetail() {
   }
 
   function handleNameChange(seatID, name) {
-    setPassengerNames({
-      ...passengerNames,
-      [seatID]: name
-    })
+    setPassengerNames({ ...passengerNames, [seatID]: name })
   }
 
   function handleOpenModal() {
@@ -79,10 +86,7 @@ function FlightDetail() {
   async function handleConfirmBooking() {
     setBookingError(null)
 
-    const allFilled = selectedSeats.every(
-      seat => passengerNames[seat.ID]?.trim()
-    )
-
+    const allFilled = selectedSeats.every(seat => passengerNames[seat.ID]?.trim())
     if (!allFilled) {
       setBookingError('Please fill in all passenger names')
       return
@@ -101,9 +105,7 @@ function FlightDetail() {
     try {
       const res = await fetch('http://localhost:8080/bookings', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       })
 
@@ -114,9 +116,8 @@ function FlightDetail() {
       }
 
       const booking = await res.json()
-
       navigate(`/bookings/${booking.ID}`)
-    } catch {
+    } catch  {
       setBookingError('Failed to process booking. Please try again.')
     } finally {
       setIsSubmitting(false)
@@ -124,50 +125,55 @@ function FlightDetail() {
   }
 
   if (loadError) {
-    return <p className="error-text">{loadError}</p>
+    return <div className="page"><p className="error-text">{loadError}</p></div>
   }
 
   if (!flight) {
-    return <p>Loading...</p>
+    return <div className="page"><p>Loading...</p></div>
   }
 
   const seatSubtotal = flight.Price * selectedSeats.length
   const totalServiceFee = seatSubtotal * SERVICE_FEE_PERCENT
   const totalPlatformFee = seatSubtotal * PLATFORM_FEE_PERCENT
-  const grandTotal =
-    seatSubtotal + totalServiceFee + totalPlatformFee
+  const grandTotal = seatSubtotal + totalServiceFee + totalPlatformFee
+
+  const rows = groupSeatsByRow(seats)
 
   return (
-    <div className="flight-detail-page">
-      <h1>
-        {flight.Airline} — {flight.Origin} to {flight.Destination}
-      </h1>
+    <div className="page flight-detail-page">
+      <div className="flight-detail-header">
+        <h1>{flight.Origin} to {flight.Destination}</h1>
+        <p>{flight.Airline}</p>
+      </div>
 
-      <div className="seat-map">
-        {seats.map(seat => (
-          <button
-            key={seat.ID}
-            className={`seat seat-${getSeatStatus(seat)}`}
-            disabled={seat.IsBooked}
-            onClick={() => toggleSeat(seat)}
-          >
-            {seat.SeatNumber}
-          </button>
-        ))}
+      <div className="cabin">
+        <div className="cabin-nose" />
+        <div className="cabin-rows">
+          {rows.map(row => (
+            <div className="seat-row" key={row.rowNum}>
+              <span className="row-number">{row.rowNum}</span>
+              <div className="row-seats">
+                {row.seats.map(seat => (
+                  <button
+                    key={seat.ID}
+                    className={`seat seat-${getSeatStatus(seat)}`}
+                    disabled={seat.IsBooked}
+                    onClick={() => toggleSeat(seat)}
+                    title={seat.SeatNumber}
+                  >
+                    {seat.SeatNumber}
+                  </button>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
 
       <div className="legend">
-        <span>
-          <i className="dot dot-available" /> Available
-        </span>
-
-        <span>
-          <i className="dot dot-selected" /> Selected
-        </span>
-
-        <span>
-          <i className="dot dot-booked" /> Booked
-        </span>
+        <span><i className="dot dot-available" /> Available</span>
+        <span><i className="dot dot-selected" /> Selected</span>
+        <span><i className="dot dot-booked" /> Booked</span>
       </div>
 
       <div className="price-summary">
@@ -175,20 +181,17 @@ function FlightDetail() {
           <span>Seats ({selectedSeats.length})</span>
           <span>{seatSubtotal.toLocaleString()}</span>
         </div>
-
         <div className="price-row">
           <span>Service fee (5%)</span>
           <span>{totalServiceFee.toLocaleString()}</span>
         </div>
-
         <div className="price-row">
           <span>Platform fee (2.5%)</span>
           <span>{totalPlatformFee.toLocaleString()}</span>
         </div>
-
         <div className="price-row total">
           <span>Total</span>
-          <span>{grandTotal.toLocaleString()}</span>
+          <span>Rp {grandTotal.toLocaleString()}</span>
         </div>
 
         <button
