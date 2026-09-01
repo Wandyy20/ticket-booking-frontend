@@ -116,6 +116,7 @@ function FlightDetail() {
       }
 
       const booking = await res.json()
+      console.log('booking created:', booking)
       navigate(`/bookings/${booking.ID}`)
     } catch  {
       setBookingError('Failed to process booking. Please try again.')
