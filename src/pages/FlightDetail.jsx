@@ -37,7 +37,7 @@ function FlightDetail() {
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   useEffect(() => {
-    fetch(`${API_URL}/${id}`)
+    fetch(`${API_URL}/flights/${id}`)
       .then(res => {
         if (!res.ok) throw new Error('Failed to load flight data')
         return res.json()
@@ -45,7 +45,7 @@ function FlightDetail() {
       .then(data => setFlight(data))
       .catch(() => setLoadError('Failed to load flight data'))
 
-    fetch(`${API_URL}/${id}/seats`)
+    fetch(`${API_URL}/flights/${id}/seats`)
       .then(res => {
         if (!res.ok) throw new Error('Failed to load seat data')
         return res.json()
