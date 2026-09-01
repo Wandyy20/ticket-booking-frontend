@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
+import { API_URL } from '../config'
 
 function BookingConfirmation() {
     const { id } = useParams()
@@ -7,7 +8,7 @@ function BookingConfirmation() {
     const [loadError, setLoadError] = useState(null)
 
     useEffect(() => {
-        fetch(`http://localhost:8080/bookings/${id}`)
+        fetch(`${API_URL}/${id}`)
         .then(res => {
             if (!res.ok) throw new Error('Booking not found')
             return res.json()

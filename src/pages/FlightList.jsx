@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
+import { API_URL } from '../config'
 
 function airportCode(cityName) {
   return cityName.slice(0, 3).toUpperCase()
@@ -10,7 +11,7 @@ function FlightList() {
   const [loadError, setLoadError] = useState(null)
 
   useEffect(() => {
-    fetch('http://localhost:8080/flights')
+    fetch(`${API_URL}/flights`)
       .then(res => {
         if (!res.ok) throw new Error('Failed to load flights')
         return res.json()

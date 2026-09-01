@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import PassengerModal from './PassengerModal'
+import { API_URL } from '../config'
 
 const SERVICE_FEE_PERCENT = 0.05
 const PLATFORM_FEE_PERCENT = 0.025
@@ -36,7 +37,7 @@ function FlightDetail() {
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   useEffect(() => {
-    fetch(`http://localhost:8080/flights/${id}`)
+    fetch(`${API_URL}/${id}`)
       .then(res => {
         if (!res.ok) throw new Error('Failed to load flight data')
         return res.json()
@@ -44,7 +45,7 @@ function FlightDetail() {
       .then(data => setFlight(data))
       .catch(() => setLoadError('Failed to load flight data'))
 
-    fetch(`http://localhost:8080/flights/${id}/seats`)
+    fetch(`${API_URL}/${id}/seats`)
       .then(res => {
         if (!res.ok) throw new Error('Failed to load seat data')
         return res.json()
@@ -103,7 +104,7 @@ function FlightDetail() {
     }
 
     try {
-      const res = await fetch('http://localhost:8080/bookings', {
+      const res = await fetch(`${API_URL}/bookings`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
