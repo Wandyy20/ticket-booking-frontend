@@ -1,1 +1,1 @@
-export const API_URL = 'ticket-booking-production-6905.up.railway.app'
+export const API_URL = 'https://ticket-booking-production-ab71.up.railway.app'
